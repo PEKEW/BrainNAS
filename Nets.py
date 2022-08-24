@@ -1,13 +1,10 @@
-from ctypes import Union
 from torch.autograd import Variable as V
-import torch.nn.functional as F
+
 import torch.nn as nn
 import torch
-from torch.nn import Parameter as P
 from Args import args as A
-from copy import deepcopy
 from Cells import Cell
-from typing import Union, Tuple, Any, Callable, Iterator, Set, Optional, overload, TypeVar, Mapping, Dict, List
+from typing import Iterator
 M = nn.Module
 T = torch.Tensor
 P= torch.nn.Parameter
@@ -37,7 +34,7 @@ class HyperNet(M):
         """生成路径概率
         每个cell都对应一组路径 所以形状是 cell_num * path_num
         """
-        return V(1e-3 * torch.randn(self.cell_num, self.path_num), requires_grad=True)
+        return V(torch.randn(self.cell_num, self.path_num), requires_grad=True)
     
     def get_path_prob(self) -> list:
         return [self.path_prob]
@@ -58,10 +55,18 @@ class HyperNet(M):
             graph.append(Cell(cell_type, self.path_num))
         feature_num = A.liner_in*A.node_num
         tail_stem = nn.Sequential(
-            nn.Linear(feature_num, int(feature_num//2)),
-            nn.LeakyReLU(int(feature_num//2),inplace=False),
+            nn.Linear(feature_num, 128),
+            nn.LeakyReLU(128,inplace=False),
             nn.Dropout(A.drop_prob),
-            nn.Linear(int(feature_num//2), A.out_size),
+
+            nn.Linear(128, 64),
+            nn.LeakyReLU(64,inplace=False),
+            nn.Dropout(A.drop_prob),
+
+            nn.Linear(64, A.out_size),
+            nn.LeakyReLU(A.out_size,inplace=False),
+            nn.Dropout(A.drop_prob),
+
             nn.Softmax(dim=1)
         )
         tail_stem.type_ = "classifiler"
@@ -74,8 +79,10 @@ class HyperNet(M):
             if sub_graph.type_ == "classifiler":
                 x = sub_graph(x.view(-1, A.liner_in*A.node_num))
             else:
-                p = F.softmax(self.path_prob[cell_num], dim=0)
+                # p = F.softmax(self.path_prob[cell_num], dim=0)
+                p = self.path_prob[cell_num]
+                # if sub_graph.type_ == 'e2e':
+                #     print(f"type:{sub_graph.type_} -> paht_prob:{p}")
                 x,_ = sub_graph(x, p=p)
         return x
-    
     

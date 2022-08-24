@@ -10,13 +10,15 @@ class TendencyOPT(Optimizer):
         self.weight_decay = default['weight_decay'] if 'weight_decay' in default else 0
         self.gamma = default['gamma'] if 'gamma' in default else 0.01
         self.alpha = default['alpha'] if 'alpha' in default else 0.5
-        self.beta = default['beta'] if 'beta' in default else 0.5
+        # self.beta = default['beta'] if 'beta' in default else 0.5
+        self.beta = default['beta'] if 'beta' in default else 0
         self.grad_bak = {}
     
     def step(self, closure=None):
         for param_group in self.param_groups:
             params = param_group['params']
             for param in params:
+                # print(param.grad.data)
                 z = param.data.clone().detach() - self.lr * param.grad.data.clone()
                 v = self.St(z) - param.data.clone().detach()
                 if param in self.grad_bak:
@@ -27,4 +29,5 @@ class TendencyOPT(Optimizer):
                 param.data = param.data + self.alpha * v - self.beta * t
     
     def St(self, data):
-        return torch.sign(data) * torch.max(torch.zeros(data.shape), torch.abs(data) - self.gamma)
+        # return torch.sign(data) * torch.max(torch.zeros(data.shape), torch.abs(data) - self.gamma)
+        return data

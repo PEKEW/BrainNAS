@@ -3,12 +3,14 @@ from torch.utils.data import Dataset
 import scipy.io as io
 import numpy as np
 from torch.autograd import Variable as V
+from Args import args as A
+
 D = Dataset
 T = torch.tensor
 
 class BrainDataBase(D):
     def __init__(self,x,y) -> None:
-        x = np.reshape(x,(x.shape[0],1,90,90))
+        x = np.reshape(x,(x.shape[0],1,A.in_size[2],A.in_size[3]))
         self.x = V(T(x,dtype=torch.float32))
         self.y = V(T(y,dtype=torch.float32))
     def __len__(self) -> int:
@@ -41,4 +43,5 @@ class BrainDataSet:
         
 class ABIDE1(BrainDataSet):
     def __init__(self,path:str):
-        super().__init__(pth_head=path,file_head='ALLASD',file_tail='_NETFC_SG_Pear')
+        # super().__init__(pth_head=path,file_head='ALLASD',file_tail='_NETFC_SG_Pear')
+        super().__init__(pth_head=path,file_head='ALLASD',file_tail='_cc200',folds=10)

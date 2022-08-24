@@ -1,10 +1,10 @@
 class args:
-    lr = 1e-3
+    lr = 1e-2
     gpu_id = 0
     weight_decay = 3e-4
     # 网络形状
-    in_size = (16,1,90,90) # B C H W
-    out_size = (8)
+    in_size = (16,1,200,200) # B C H W
+    out_size = 8
     # cell 个数
     cell_num = 3
     # cell中节点的个数
@@ -14,12 +14,12 @@ class args:
     
 
     # dropout
-    drop_prob = 0.5
+    drop_prob = 0.2
     # channles设置
     channles = {
-        'e2e': (1, 8),
-        'e2n': (32, 64),
-        'n2g': (256, 512)
+        'e2e': (1, 4),
+        'e2n': (8, 16),
+        'n2g': (32, 64)
     }
     # 线性层的输入
     liner_in = channles['n2g'][1]
@@ -32,9 +32,9 @@ class args:
     }
     # cell的输入输出形状设置
     cell_shape = {
-        'e2e': ((90,90), (90,90)),
-        'e2n': ((90,90), (90,1)),
-        'n2g': ((90,1), (1,1))
+        'e2e': ((in_size[2],in_size[3]), (in_size[2],in_size[3])),
+        'e2n': ((in_size[2],in_size[3]), ((in_size[2],1))),
+        'n2g': (((in_size[2],1)), (1,1))
     }
     op_leak_relu = 0.33
     
@@ -52,3 +52,4 @@ class args:
         'h': 'Copy',
         'w': 'Copy',
     }
+    data_path = '/home/scroot/CODE/bNAS/data/Datasets_cc200_10/'

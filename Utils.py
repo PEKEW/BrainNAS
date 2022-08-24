@@ -1,4 +1,3 @@
-from email.policy import default
 import random
 import torch.cuda as cuda
 import torch.backends.cudnn as cudnn
@@ -65,7 +64,7 @@ def get_data(type_:str) ->BD:
         type_ (数据集类型): ADHD,ABIDE1,ABIDE2
     """
     if type_ == 'ADHD':
-        return ABIDE1('/Users/mac/Desktop/nas/CM-NAS/BrainNetNAS/ABIDEI/')
+        return ABIDE1(A.data_path)
     elif type_ == 'ABIDE1':
         # todo
         pass
@@ -108,8 +107,7 @@ def create_optimizer(net) -> list:
                                 momentum=A.momentum,
                                 weight_decay=A.weight_decay)
 
-    default = {}
-    path_optimizer = TendencyOPT(net.get_path_prob(), default)
+    path_optimizer = TendencyOPT(net.get_path_prob(), {})
     return net_optimizer, path_optimizer
 
 def generate_data_queue(dataset) -> list:
