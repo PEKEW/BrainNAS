@@ -32,7 +32,7 @@ class BrainDataSet:
         print("loadding data...")
         for i in range(1,self.folds+1):
             data_sets = {}
-            file_name = self.pth_head+self.file_head+str(i)+self.tail+'.mat'
+            file_name = self.pth_head+self.file_head+str(i)+self.tail+'_normal.mat'
             for k in key:
                 x = io.loadmat(file_name)['net_'+k]
                 y = io.loadmat(file_name)['phenotype_'+k][:,2::]

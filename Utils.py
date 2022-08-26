@@ -2,7 +2,7 @@ import random
 import torch.cuda as cuda
 import torch.backends.cudnn as cudnn
 from Args import args as A
-from Nets import HyperNet
+from Nets import HyperNet, BrainNetCNN
 import torch.nn as nn
 from Dataset import *
 import torch
@@ -55,6 +55,7 @@ def get_net() -> HN:
     """
 
     net = HN()
+    # net = BrainNetCNN()
     return net
     
 def get_data(type_:str) ->BD:
@@ -106,8 +107,10 @@ def create_optimizer(net) -> list:
                                 lr=A.lr,
                                 momentum=A.momentum,
                                 weight_decay=A.weight_decay)
-
-    path_optimizer = TendencyOPT(net.get_path_prob(), {})
+    if isinstance(net ,BrainNetCNN):
+        path_optimizer = None
+    else:
+        path_optimizer = TendencyOPT(net.get_path_prob(), {})
     return net_optimizer, path_optimizer
 
 def generate_data_queue(dataset) -> list:
@@ -119,15 +122,15 @@ def generate_data_queue(dataset) -> list:
 
     train_queue = DL(
         train_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers)
+        pin_memory=True, num_workers=num_workers, drop_last=True)
 
     valid_queue = DL(
         valid_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers)
+        pin_memory=True, num_workers=num_workers, drop_last=True)
 
     test_queue = DL(
         test_data, batch_size=batch_size,
-        num_workers=num_workers, pin_memory=True)
+        num_workers=num_workers, pin_memory=True, drop_last=True)
 
     queues = [train_queue, valid_queue, test_queue]
     return queues
