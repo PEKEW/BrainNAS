@@ -39,7 +39,7 @@ class BrainDataSet:
                 data_sets[k] = BrainDataBase(x,y)
             data_set_list.append(data_sets)
             print("all data has been loaded")
-            return data_set_list
+        return data_set_list
         
 class ABIDE1(BrainDataSet):
     def __init__(self,path:str):

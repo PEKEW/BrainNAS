@@ -17,7 +17,6 @@ class FindFuckingGrad(nn.Module):
         nn.BatchNorm2d(1, affine=True),
         nn.Dropout(0.2))
     def forward(self, x):
-        # x = torch.sum(x,dim=1,keepdims=True)
         return self.op(x)
 
 class FindFuckingGrad2(nn.Module):

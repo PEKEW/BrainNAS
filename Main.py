@@ -2,6 +2,22 @@ from Utils import *
 from torch.utils.tensorboard import SummaryWriter
 from extra import *
 
+def infer(epoch, set_info, net, test_queue):
+    pos_ture = 0
+    total = 0
+    with TrainMode(net, False) as net:
+        for _, (test_in, test_tar) in enumerate(test_queue):
+            if set_info['cuda']:
+                with torch.no_grad():
+                    test_in, test_tar = test_in.cuda(), test_tar.cuda()
+            test_out = net(test_in)
+            pos_ture += sum((test_out[:,0]>=0.5) & (test_tar[:,0]==1.0)) + \
+                sum((test_out[:,0] < 0.5) & (test_tar[:,0]==0.0))
+            # todo 召回率等计算
+            total += test_out.shape[0]
+        print(f"acc in [{epoch}] epoch:{pos_ture/total * 100}%")
+    return pos_ture/total * 100
+
 def loss_(loss_cal, out, tar):
     a_lable = 0.3
     a_exp = 0.1
@@ -30,7 +46,6 @@ def train(set_info):
     net.train()
     # 折
     for fold in data.dataset:
-        writer = SummaryWriter()
         # todo 计算模型尺寸
         net_optimizer, path_optimizer = create_optimizer(net)
         train_queue, valid_queue, test_queue = generate_data_queue(fold)
@@ -53,30 +68,11 @@ def train(set_info):
                 train_out = net(train_in)
                 loss = loss_(loss_caler, train_out, train_tar)
                 loss.backward()
-                # print(loss.data)
                 torch.nn.utils.clip_grad_norm_(net.parameters(), max_norm=10, norm_type=2)
-                for name, parameters in net.named_parameters():
-                    print(name, 'grad:', parameters.grad)
                 net_optimizer.step()
                 # path_optimizer.step()
-                # for t in range(3):
-                # 	dct = {}
-                # 	for i in range(10):
-                # 		dct[str(t)+'_'+str(i)] = net.path_prob[t,i].data
-                # 	writer.add_scalars('path_prob',dct,epoch*100+step)
-            pos_ture = 0
-            total = 0
-            # with TrainMode(net, False) as net:
-            #     for _, (test_in, test_tar) in enumerate(test_queue):
-            #         if set_info['cuda']:
-            #             with torch.no_grad():
-            #                 test_in, test_tar = test_in.cuda(), test_tar.cuda()
-            #         test_out = net(test_in)
-            #         pos_ture += sum((test_out[:,0]>=0.5) & (test_tar[:,0]==1.0)) + \
-            #             sum((test_out[:,0] < 0.5) & (test_tar[:,0]==0.0))
-            #         # todo 召回率等计算
-            #         total += test_out.shape[0]
-            #     print(f"acc in [{epoch}] epoch:{pos_ture/total * 100}%")
+            acc = infer(epoch, set_info, net, test_queue)
+            print(f"acc in {epoch} epoch: {acc}")
     
                     
 

@@ -1,12 +1,10 @@
-from os import stat
+
 from Ops import *
 import torch.nn as nn
 from Args import args as A
-from torch.autograd import Variable as V
 import torch
 from Utils import *
 import torch.nn.functional as F
-from Operations import Test
 
 T = torch.Tensor
 M = nn.Module
@@ -36,7 +34,6 @@ class Cell(M):
         ops = CellList()
         for _ in range(self.path_num):
             ops.append(MixOP(self.shape_in, self.shape_out, self.c_in, self.c_out, self.type_))
-            # ops.append(Test(0,0,0,0,self.type_))
         return ops
     
     
@@ -45,21 +42,16 @@ class Cell(M):
         states = [x]
         p = kwargs['p'] # 路径概率 size = 1,10
         path_idx = 0
-        for node_idx in range(self.node_num):
+        for _ in range(self.node_num):
             h_state = 0
             p_ = p[path_idx:path_idx+len(states)+1]
-            # print(f"{path_idx} -> {path_idx+len(states)}")
-            # softed_p = F.softmax(p_, dim=0)
+            softed_p = F.softmax(p_, dim=0)
             
-            # states.append(sum([self.cal_graph[path_idx](state) for state in states]))
             for i,state in enumerate(states):
-                print(f"node {[i]} --> path{path_idx} --> node{len(states)}")
                 h_ = self.cal_graph[path_idx](state)
-                # h_.mul_(softed_p[i])
+                h_.mul_(softed_p[i])
                 h_state += h_
                 path_idx += 1
             states.append(h_state)
                 
-        out = torch.cat(states[1::], dim=1)
-        # return out
         return torch.cat(states[1::], dim=1)

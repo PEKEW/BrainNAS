@@ -11,8 +11,6 @@ class args:
     node_num = 4
     # 数据集类型
     data_type = 'ADHD'
-    
-
     # dropout
     drop_prob = 0.33
     # channles设置
