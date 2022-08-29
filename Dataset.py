@@ -35,13 +35,15 @@ class BrainDataSet:
             file_name = self.pth_head+self.file_head+str(i)+self.tail+'_normal.mat'
             for k in key:
                 x = io.loadmat(file_name)['net_'+k]
-                y = io.loadmat(file_name)['phenotype_'+k][:,2::]
+                # y = io.loadmat(file_name)['phenotype_'+k][:,2::]
+                y = io.loadmat(file_name)['phenotype_'+k][:,2]
                 data_sets[k] = BrainDataBase(x,y)
             data_set_list.append(data_sets)
-            print("all data has been loaded")
+            print(f"{i} fold data has been loaded")
+        print("all data has been loaded")
         return data_set_list
         
 class ABIDE1(BrainDataSet):
     def __init__(self,path:str):
         # super().__init__(pth_head=path,file_head='ALLASD',file_tail='_NETFC_SG_Pear')
-        super().__init__(pth_head=path,file_head='ALLASD',file_tail='_cc200',folds=10)
+        super().__init__(pth_head=path,file_head='ALLASD',file_tail='_cc200',folds=1)

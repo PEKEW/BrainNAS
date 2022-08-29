@@ -122,15 +122,15 @@ def generate_data_queue(dataset) -> list:
 
     train_queue = DL(
         train_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers, drop_last=True)
+        pin_memory=True, num_workers=num_workers, drop_last=True,shuffle=True)
 
     valid_queue = DL(
         valid_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers, drop_last=True)
+        pin_memory=True, num_workers=num_workers, drop_last=True,shuffle=True)
 
     test_queue = DL(
         test_data, batch_size=batch_size,
-        num_workers=num_workers, pin_memory=True, drop_last=True)
+        num_workers=num_workers, pin_memory=True, drop_last=True,shuffle=True)
 
     queues = [train_queue, valid_queue, test_queue]
     return queues

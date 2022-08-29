@@ -4,10 +4,16 @@ from Args import args as A
 
 M = nn.Module
 
+# OPS = {
+#     'e2e': ['E2E','skip','none'],
+#     'e2n': ['E2N','skip','none'],
+#     'n2g': ['N2G','skip','none'],
+# }
+
 OPS = {
-    'e2e': ['E2E','skip','none'],
-    'e2n': ['E2N','skip','none'],
-    'n2g': ['N2G','skip','none'],
+    'e2e': ['E2E'],
+    'e2n': ['E2N'],
+    'n2g': ['N2G'],
 }
 
 MetaOP = {
@@ -31,7 +37,7 @@ class BaseOP(M):
         self.reg_out = None
         self.RBD = nn.Sequential(
             nn.LeakyReLU(A.op_leak_relu),
-            nn.BatchNorm2d(c_out, affine=True),
+            # nn.BatchNorm2d(c_out, affine=True),
             nn.Dropout(A.drop_prob)
         )
         
@@ -77,16 +83,16 @@ class RegOPsWCopyIn(M):
     def __init__(self, **kwargs) -> None:
         super().__init__()
     def forward(self, x):
-        if x.shape[2] == 1:
-            x = torch.cat([x]*A.in_size[3], 2)
+        if x.shape[3] == 1:
+            x = torch.cat([x]*A.in_size[3], 3)
         return x
 
 class RegOPsHCopyIn(M):
     def __init__(self, **kwargs) -> None:
         super().__init__()
     def forward(self, x):
-        if x.shape[3] == 1:
-            x = torch.cat([x]*A.in_size[2], 3)
+        if x.shape[2] == 1:
+            x = torch.cat([x]*A.in_size[2], 2)
         return x
 
 class RegOPsCCopyOut(M):
@@ -99,16 +105,16 @@ class RegOPsWCopyOut(M):
     def __init__(self, **kwargs) -> None:
         super().__init__()
     def forward(self, x):
-        if x.shape[2] != 1:
-            x = torch.sum(x, 2, keepdim=True)
+        if x.shape[3] != 1:
+            x = torch.sum(x, 3, keepdim=True)
         return x
 
 class RegOPsHCopyOut(M):
     def __init__(self, **kwargs) -> None:
         super().__init__()
     def forward(self, x):
-        if x.shape[3] != 1:
-            x = torch.sum(x, 3, keepdim=True)
+        if x.shape[2] != 1:
+            x = torch.sum(x, 2, keepdim=True)
         return x
     
 class Zeros(BaseOP):

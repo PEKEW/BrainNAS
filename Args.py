@@ -1,10 +1,10 @@
 class args:
-    lr = 0.01
+    lr = 0.0005
     gpu_id = 0
-    weight_decay = 3e-4
+    weight_decay = 0.0005
     # 网络形状
-    in_size = (32,1,200,200) # B C H W
-    out_size = 8
+    in_size = (64,1,200,200) # B C H W
+    out_size = 2
     # cell 个数
     cell_num = 3
     # cell中节点的个数
@@ -12,7 +12,7 @@ class args:
     # 数据集类型
     data_type = 'ADHD'
     # dropout
-    drop_prob = 0.33
+    drop_prob = 0.2
     # channles设置
     channles = {
         'e2e': (1, 4),

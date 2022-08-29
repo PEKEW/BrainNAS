@@ -42,14 +42,26 @@ class Cell(M):
         states = [x]
         p = kwargs['p'] # 路径概率 size = 1,10
         path_idx = 0
+        state_dct_copy = self.cal_graph[path_idx].state_dict()
         for _ in range(self.node_num):
             h_state = 0
             p_ = p[path_idx:path_idx+len(states)+1]
             softed_p = F.softmax(p_, dim=0)
+            # for i,state in enumerate(states):
+            #     if path_idx != 0:
+            #         self.cal_graph[path_idx].load_state_dict(state_dct_copy)
+            #         with torch.no_grad():
+            #             h_ = self.cal_graph[path_idx](state)
+            #     else:
+            #         h_ = self.cal_graph[path_idx](state)
+            #     # h_.mul_(softed_p[i])
+            #     h_state += h_
+            #     path_idx += 1
+            # states.append(h_state)
             
             for i,state in enumerate(states):
                 h_ = self.cal_graph[path_idx](state)
-                h_.mul_(softed_p[i])
+                # h_.mul_(softed_p[i])
                 h_state += h_
                 path_idx += 1
             states.append(h_state)
