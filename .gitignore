@@ -1,3 +1,4 @@
 data/
 path_prob/
 runs/
+*.json

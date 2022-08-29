@@ -17,12 +17,12 @@ class BrainNetCNN(M):
         self.tail = nn.Sequential(
             nn.Linear(128, 64),
             nn.LeakyReLU(64,inplace=False),
-            nn.Dropout(A.drop_prob),
-
-            nn.Linear(64, A.out_size),
+            nn.Linear(64, 32),
             nn.LeakyReLU(A.out_size,inplace=False),
-            nn.Dropout(A.drop_prob),
-
+            nn.Linear(32,16),
+            nn.LeakyReLU(A.out_size,inplace=False),
+            nn.Linear(16, A.out_size),
+            nn.LeakyReLU(A.out_size,inplace=False),
             nn.Softmax(dim=1)
         )
     def init_graph(self):
@@ -47,9 +47,14 @@ class SupHead(M):
     def __init__(self, feature_num) -> None:
         super().__init__()
         self.classifier = nn.Sequential(
+            nn.Linear(feature_num, 64),
             nn.LeakyReLU(A.op_leak_relu),
-            nn.Linear(feature_num, A.out_size),
-            nn.LeakyReLU(64,inplace=False),
+            nn.Linear(64, 32),
+            nn.LeakyReLU(A.op_leak_relu),
+            nn.Linear(32,16),
+            nn.LeakyReLU(A.op_leak_relu),
+            nn.Linear(16, A.out_size),
+            nn.LeakyReLU(A.op_leak_relu),
         )
     def forward(self, x):
         return self.classifier(x)
@@ -66,7 +71,7 @@ class HyperNet(M):
         self.path_num = self.init_path_num()
         self.path_prob = self.init_path_prob()
         self.cal_graph = self.init_cal_graph()
-        self._test_var = self.init_path_prob()
+        self.sup_head = self.init_sup_head() if A.need_help else None
         
     def init_path_num(self) -> int:
         """生成cell中路径个数
@@ -96,6 +101,7 @@ class HyperNet(M):
                 #* feature num = C*H*W
                 A.channles[cell_type][1]*self.node_num*A.shape_constraint[cell_type][1][1]*A.shape_constraint[cell_type][1][2]
                 )
+            
         return sup_heads
     def init_cal_graph(self) -> nn.ModuleList:
         """初始化计算图
@@ -111,18 +117,19 @@ class HyperNet(M):
         feature_num = A.liner_in*A.node_num
         tail_stem = nn.Sequential(
             nn.Linear(feature_num, 64),
-            nn.LeakyReLU(64,inplace=False),
-            nn.Dropout(A.drop_prob),
-
-            nn.Linear(64, A.out_size),
-            nn.LeakyReLU(A.out_size,inplace=False),
+            nn.LeakyReLU(A.op_leak_relu),
+            nn.Linear(64, 32),
+            nn.LeakyReLU(A.op_leak_relu),
+            nn.Linear(32,16),
+            nn.LeakyReLU(A.op_leak_relu),
+            nn.Linear(16, A.out_size),
+            nn.LeakyReLU(A.op_leak_relu),
         )
         tail_stem.type_ = "classifiler"
         graph[tail_stem.type_] = tail_stem
         return graph
     
     def forward(self, x, *args, **kwargs) -> T:
-        sup_head_out = []
         for cell_num, (type_, sub_graph) in enumerate(self.cal_graph.items()):
             if type_ == "classifiler":
                 x = sub_graph(x.view(A.in_size[0], -1))
@@ -130,5 +137,4 @@ class HyperNet(M):
                 p = F.softmax(self.path_prob[cell_num], dim=0)
                 p = self.path_prob[cell_num]
                 x = sub_graph(x, p=p)
-                # sup_head_out.append(self.sup_head[type_](x.view(A.in_size[0],-1)))
-        return x, sup_head_out
+        return x, None

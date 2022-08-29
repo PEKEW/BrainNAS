@@ -36,7 +36,7 @@ class BaseOP(M):
         self.reg_in = None
         self.reg_out = None
         self.RBD = nn.Sequential(
-            nn.LeakyReLU(A.op_leak_relu),
+            # nn.LeakyReLU(A.op_leak_relu),
             # nn.BatchNorm2d(c_out, affine=True),
             nn.Dropout(A.drop_prob)
         )
