@@ -59,7 +59,7 @@ class Cell(M):
         return ops
     
     
-    def forward(self, x, *arg, **kwargs) -> T:
+    def unused__forward(self, x, *arg, **kwargs) -> T:
         # cell forward
         #                                                  +---+                               
         #                                                  | p |                               
@@ -95,8 +95,8 @@ class Cell(M):
             states.append(h_state)
         return torch.cat(states[1::], dim=1)
     
-    def unused__forward(self, x, *args, **kwargs) -> T:
-        """另一种forward 类似于rnn 是共享权重的 用于加快推理 缩小网络尺寸
+    def forward(self, x, *args, **kwargs) -> T:
+        """另一种forward 是共享权重的 用于加快推理 缩小网络尺寸
         """
         states = [x]
         p = kwargs['p']

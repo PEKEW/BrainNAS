@@ -103,15 +103,17 @@ def loss(loss_caler:nn.CrossEntropyLoss, y_:T, y:T, entropy:T, path_prob:T) -> T
     return base_loss + entropy_loss + sparsity_loss
 
 def create_optimizer(net) -> list:
-    net_optimizer = torch.optim.SGD(net.parameters(), 
+
+    net_optimizer = torch.optim.SGD(filter(lambda p: p.requires_grad, net.parameters()), 
                                 lr=A.lr,
                                 momentum=A.momentum,
                                 weight_decay=A.weight_decay)
+    lr_scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(net_optimizer, T_max=150, eta_min=0)
     if isinstance(net ,BrainNetCNN):
         path_optimizer = None
     else:
         path_optimizer = TendencyOPT(net.get_path_prob(), {})
-    return net_optimizer, path_optimizer
+    return net_optimizer, lr_scheduler, path_optimizer
 
 def generate_data_queue(dataset) -> list:
     
@@ -122,15 +124,27 @@ def generate_data_queue(dataset) -> list:
 
     train_queue = DL(
         train_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers, drop_last=True,shuffle=True)
+        pin_memory=True, num_workers=num_workers,shuffle=True)
 
     valid_queue = DL(
         valid_data, batch_size=batch_size,
-        pin_memory=True, num_workers=num_workers, drop_last=True,shuffle=True)
+        pin_memory=True, num_workers=num_workers,shuffle=True)
 
     test_queue = DL(
         test_data, batch_size=batch_size,
-        num_workers=num_workers, pin_memory=True, drop_last=True,shuffle=True)
+        num_workers=num_workers, pin_memory=True,shuffle=True)
 
-    queues = [train_queue, valid_queue, test_queue]
-    return queues
+    return train_queue, valid_queue, test_queue
+
+
+# todo
+def triu(x:T) -> T:
+    """把输入取上三角 展开然后返回 同时保证梯度传播
+
+    Args:
+        x (T): shape = B C W H
+
+    Returns:
+        T: shape = B *
+    """
+    ...

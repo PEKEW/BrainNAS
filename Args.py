@@ -2,7 +2,7 @@ class args:
     
     # ! 网络训练相关参数
     # 学习率
-    lr = 3e-3
+    lr = 0.1
     # 梯度衰减
     weight_decay = 1e-4
     # 梯度动量
@@ -21,6 +21,8 @@ class args:
     loss_alpha = 0.3
     # 损失中表现型占比
     loss_exp = 0.1
+    # 模型保存路径
+    model_pth = 'bst'
     
     
     # ! 数据集相关参数
@@ -35,7 +37,8 @@ class args:
     
     # ! 网络形状相关参数
     # B C H W
-    in_size = (96,1,200,200) 
+    # ! 验证和测试只有84个
+    in_size = (32,1,200,200) 
     # 输出个数
     out_size = 2
     # cell 个数

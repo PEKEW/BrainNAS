@@ -26,7 +26,7 @@ class BrainDataSet:
         self.tail = file_tail or ''
         self.dataset = self.init_dataset()
     
-    def init_dataset(self) -> list:
+    def init_dataset(self) -> 'list[dict]':
         key = ['train','valid','test']
         data_set_list = []
         print("loadding data...")
@@ -36,7 +36,7 @@ class BrainDataSet:
             for k in key:
                 x = io.loadmat(file_name)['net_'+k]
                 # y = io.loadmat(file_name)['phenotype_'+k][:,2::]
-                y = io.loadmat(file_name)['phenotype_'+k][:,2]
+                y = io.loadmat(file_name)['phenotype_'+k][:,0:2]
                 data_sets[k] = BrainDataBase(x,y)
             data_set_list.append(data_sets)
             print(f"{i} fold data has been loaded")

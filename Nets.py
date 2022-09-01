@@ -8,7 +8,7 @@ from Cells import Cell
 from typing import Iterator, OrderedDict
 M = nn.Module
 T = torch.Tensor
-P = torch.nn.Parameter
+P = nn.Parameter
 
 class BrainNetCNN(M):
     def __init__(self) -> None:
@@ -16,12 +16,12 @@ class BrainNetCNN(M):
         self.cal_garph = self.init_graph()
         self.tail = nn.Sequential(
             nn.Linear(128, 64),
-            nn.LeakyReLU(64,inplace=False),
-            nn.Linear(64, 32),
-            nn.LeakyReLU(A.out_size,inplace=False),
-            nn.Linear(32,16),
-            nn.LeakyReLU(A.out_size,inplace=False),
-            nn.Linear(16, A.out_size),
+            # nn.LeakyReLU(64,inplace=False),
+            # nn.Linear(64, 32),
+            # nn.LeakyReLU(A.out_size,inplace=False),
+            # nn.Linear(32,16),
+            # nn.LeakyReLU(A.out_size,inplace=False),
+            # nn.Linear(16, A.out_size),
             nn.LeakyReLU(A.out_size,inplace=False),
             nn.Softmax(dim=1)
         )
@@ -72,6 +72,9 @@ class HyperNet(M):
         self.path_prob = self.init_path_prob()
         self.cal_graph = self.init_cal_graph()
         self.sup_head = self.init_sup_head() if A.need_help else None
+        for m in self.modules():
+            if isinstance(m, torch.nn.Conv2d):
+                nn.init.orthogonal_(m.weight)
         
     def init_path_num(self) -> int:
         """生成cell中路径个数
@@ -112,29 +115,76 @@ class HyperNet(M):
         self.sup_head = self.init_sup_head()
         graph = nn.ModuleDict()
         for cell_type in self.cell_type:
-            graph[cell_type] = Cell(cell_type, self.path_num)
+            sub_graph = Cell(cell_type, self.path_num)
+            # for p in sub_graph.parameters():
+            #     p.requires_grad = False
+            graph[cell_type] = sub_graph
             
         feature_num = A.liner_in*A.node_num
         tail_stem = nn.Sequential(
             nn.Linear(feature_num, 64),
             nn.LeakyReLU(A.op_leak_relu),
+            nn.Dropout(A.drop_prob),
             nn.Linear(64, 32),
             nn.LeakyReLU(A.op_leak_relu),
-            nn.Linear(32,16),
-            nn.LeakyReLU(A.op_leak_relu),
-            nn.Linear(16, A.out_size),
-            nn.LeakyReLU(A.op_leak_relu),
+            nn.Dropout(A.drop_prob),
+            nn.Linear(32, A.out_size),
+            # nn.LeakyReLU(A.op_leak_relu),
+            nn.Softmax(dim=1)
         )
         tail_stem.type_ = "classifiler"
         graph[tail_stem.type_] = tail_stem
+
         return graph
     
     def forward(self, x, *args, **kwargs) -> T:
         for cell_num, (type_, sub_graph) in enumerate(self.cal_graph.items()):
             if type_ == "classifiler":
-                x = sub_graph(x.view(A.in_size[0], -1))
+                x = sub_graph(x.view(-1, A.liner_in*A.node_num))
             else:
+                # if type_ == 'e2e':
+                #     p = F.softmax(self.path_prob[cell_num], dim=0)
+                #     p = self.path_prob[cell_num]
+                #     x = sub_graph(x, p=p)
+                # else:
+                #     with torch.no_grad():
+                #         p = F.softmax(self.path_prob[cell_num], dim=0)
+                #         p = self.path_prob[cell_num]
+                #         x = sub_graph(x, p=p)
                 p = F.softmax(self.path_prob[cell_num], dim=0)
                 p = self.path_prob[cell_num]
                 x = sub_graph(x, p=p)
         return x, None
+
+class E2E1Net(M):
+    def __init__(self) -> None:
+        super().__init__()
+        self.channels = 4
+        self.features = self.channels*A.in_size[2]
+        self.cal_garph = self.init_graph()
+        self.tail = nn.Sequential(
+            nn.Linear(self.features, int(self.features)//2),
+            nn.LeakyReLU(int(self.features)//2,inplace=False),
+            nn.Linear(int(self.features)//2, int(self.features)//4),
+            nn.LeakyReLU(int(self.features)//8,inplace=False),
+            nn.Linear(int(self.features)//8,int(self.features)//16),
+            nn.LeakyReLU(int(self.features)//16,inplace=False),
+            nn.Linear(int(self.features)//16,int(self.features)//32),
+            nn.LeakyReLU(int(self.features)//32,inplace=False),
+            nn.Linear(int(self.features)//32,A.out_size),
+            nn.LeakyReLU(A.out_size,inplace=False),
+            # nn.Softmax(dim=1)
+        )
+    def init_graph(self):
+        # self.op2 = nn.Sequential(
+        #     nn.Conv2d(self.channels, self.channels, (A.in_size[2], 1), bias=True),
+        #     nn.LeakyReLU(A.op_leak_relu),)
+        return nn.Sequential(
+            nn.Conv2d(1, self.channels, (1, A.in_size[2]), bias=True),
+            nn.LeakyReLU(A.op_leak_relu),)
+
+        
+    def forward(self,x):
+        x = self.cal_garph(x)
+        x = self.tail(x.view(-1,self.features))
+        return x

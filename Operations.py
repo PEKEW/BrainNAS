@@ -143,10 +143,10 @@ class E2E(BaseOP):
         super().__init__(shape_in, shape_out, c_in, c_out, type_)
         self.op1 = nn.Sequential(
             nn.Conv2d(self.c_out, self.c_out, (1, A.in_size[2]), bias=True),
-            self.RBD,)
+            nn.LeakyReLU(A.op_leak_relu),)
         self.op2 = nn.Sequential(
             nn.Conv2d(self.c_out, self.c_out, (A.in_size[2], 1), bias=True),
-            self.RBD,)
+            nn.LeakyReLU(A.op_leak_relu),)
         self.set_reg_op()
         self.op = lambda x:\
             torch.cat([self.op1(x)]*A.in_size[2],3)+torch.cat([self.op2(x)]*A.in_size[2],2)
@@ -156,7 +156,7 @@ class E2N(BaseOP):
         super().__init__(shape_in, shape_out, c_in, c_out, type_)
         self._op = nn.Sequential(
                 nn.Conv2d(self.c_out, self.c_out, (1, A.in_size[2]), bias=True),
-                self.RBD,)
+                nn.LeakyReLU(A.op_leak_relu),)
         self.set_reg_op()
         self.op = lambda x:self._op(x)
 
@@ -165,6 +165,6 @@ class N2G(BaseOP):
         super().__init__(shape_in, shape_out, c_in, c_out, type_)
         self._op = nn.Sequential(
                 nn.Conv2d(self.c_out, self.c_out, (A.in_size[2], 1), bias=True),
-                self.RBD,)
+                nn.LeakyReLU(A.op_leak_relu),)
         self.set_reg_op()
         self.op = lambda x:self._op(x)
